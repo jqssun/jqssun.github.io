@@ -451,7 +451,6 @@
                 scrollPosition = $("#work").scrollTop();
                 projectNav.fadeIn(150);
                 exitProject.fadeIn(150);
-                window.dispatchEvent(new Event("dotfield:resize"));
             });
 
             syncProjectNavButtons();
@@ -488,7 +487,6 @@
             projectContainer.stop(true).fadeOut(200, function () {
                 projectContainer.empty().css({ display: "none", height: "", opacity: "", overflow: "" });
                 content = false;
-                window.dispatchEvent(new Event("dotfield:resize"));
             });
 
             $("#work").stop().animate({ scrollTop: 0 }, 400);

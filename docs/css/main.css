@@ -302,9 +302,24 @@ main.is-nav-driven.is-nav-animating {
 }
 
 main.is-nav-driven #hero {
-    top: calc(var(--nav-progress) * 20%);
+    top: 0;
     animation: none !important;
     transition: none !important
+}
+
+main.is-nav-driven .hero__three-container {
+    position: fixed;
+    inset: 0;
+    height: 100vh
+}
+
+main.is-nav-driven #hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(0, 0, 0, calc((clamp(0, var(--nav-progress), 1) + clamp(0, calc(var(--nav-progress) * -1), 1)) * 0.55));
+    pointer-events: none
 }
 
 main.is-nav-driven #about {
@@ -404,15 +419,31 @@ main .meta.name p {
 #hero.is-ui-visible > .logo,
 #hero.is-ui-visible .meta.name,
 #hero.is-ui-visible .meta.social {
-    opacity: 1;
+    opacity: calc(1 - (clamp(0, var(--nav-progress), 1) + clamp(0, calc(var(--nav-progress) * -1), 1)));
     transition-delay: 0.01s
+}
+
+main.is-nav-driven:has(#about.active-screen) #hero > .logo,
+main.is-nav-driven:has(#about.active-screen) #hero .meta,
+main.is-nav-driven:has(#work.active-screen) #hero > .logo,
+main.is-nav-driven:has(#work.active-screen) #hero .meta {
+    pointer-events: none
 }
 
 /* 2 — centre edge buttons */
 #hero.is-ui-visible .hero__trigger-button.top,
 #hero.is-ui-visible .hero__trigger-button.bottom {
-    opacity: 1;
     transition-delay: 0.1s
+}
+
+#hero.is-ui-visible .hero__trigger-button.top,
+#hero.is-ui-visible .hero__trigger-button.bottom {
+    opacity: calc(1 - (clamp(0, var(--nav-progress), 1) + clamp(0, calc(var(--nav-progress) * -1), 1)))
+}
+
+main.is-nav-driven:has(#about.active-screen) #hero .hero__trigger-button,
+main.is-nav-driven:has(#work.active-screen) #hero .hero__trigger-button {
+    pointer-events: none
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -425,8 +456,18 @@ main .meta.name p {
     #hero.is-ui-visible > .logo,
     #hero.is-ui-visible .meta,
     #hero.is-ui-visible .hero__trigger-button {
-        opacity: 1;
         transition-delay: 0s
+    }
+
+    #hero.is-ui-visible > .logo,
+    #hero.is-ui-visible .meta.name,
+    #hero.is-ui-visible .meta.social {
+        opacity: calc(1 - (clamp(0, var(--nav-progress), 1) + clamp(0, calc(var(--nav-progress) * -1), 1)))
+    }
+
+    #hero.is-ui-visible .hero__trigger-button.top,
+    #hero.is-ui-visible .hero__trigger-button.bottom {
+        opacity: calc(1 - (clamp(0, var(--nav-progress), 1) + clamp(0, calc(var(--nav-progress) * -1), 1)))
     }
 }
 
@@ -482,7 +523,7 @@ main .meta.name p {
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
-    background: #000
+    background: transparent
 }
 
 .about a {
@@ -660,7 +701,7 @@ main .meta.name p {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
-    background: #000
+    background: transparent
 }
 
 .work .underline {
@@ -1291,27 +1332,4 @@ main .meta.name p {
 
 .work__content .ajax-section__content .ajaxpage__content--description p:first-child {
     margin-top: 0
-}
-
-.download-section__bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    z-index: 0;
-    pointer-events: none;
-    background: #000
-}
-
-.download-section__bg canvas {
-    display: block;
-    width: 100%;
-    height: 100%
-}
-
-.about.download-section .about__content,
-.work.download-section .work__content {
-    position: relative;
-    z-index: 1
 }
