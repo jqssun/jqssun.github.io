@@ -10,6 +10,7 @@
     var bottomTrigger = $(".hero__trigger-button.bottom");
     var closeBottom = $(".close-button.bottom");
     var closeTop = $(".close-button.top");
+    var sphereToggle = $(".sphere-interaction-toggle");
 
     function centerInit() {
         hero.css({
@@ -53,8 +54,16 @@
         work.toggleClass("active-screen", workVisible).toggleClass("idle", !workVisible);
         about.css("pointer-events", aboutInteractive ? "" : "none");
         work.css("pointer-events", workInteractive ? "" : "none");
+        main.toggleClass("is-nav-about", aboutVisible);
+        main.toggleClass("is-nav-work", workVisible);
         closeTop.css("opacity", Math.min(1, Math.max(0, navProgress)));
         closeBottom.css("opacity", Math.min(1, Math.max(0, -navProgress)));
+
+        if (Math.abs(navProgress) > 0.001) {
+            sphereToggle.removeAttr("hidden").css("opacity", Math.min(1, Math.abs(navProgress)));
+        } else {
+            sphereToggle.attr("hidden", "hidden").css("opacity", 0);
+        }
     }
 
     function applyNavigationProgress(progress) {
@@ -170,7 +179,7 @@
         return !!target.closest(
             "a, button, input, textarea, select, label, [role='button'], " +
             ".ajax-section__project-navigation, .ajax-section__project-close, " +
-            ".hero__trigger-button, .close-button, .thumbnail"
+            ".hero__trigger-button, .close-button, .sphere-interaction-toggle, .thumbnail"
         );
     }
 
@@ -258,7 +267,7 @@
     function createProjectMedia(project) {
         if (project.video) {
             return $("<div class=\"ajaxpage__media ajaxpage__media--video\"></div>").append(
-                $("<video controls playsinline preload=\"metadata\"></video>")
+                $("<video controls autoplay muted playsinline preload=\"auto\"></video>")
                     .attr("src", project.video)
                     .attr("title", U.escapeHtml(project.name))
             );

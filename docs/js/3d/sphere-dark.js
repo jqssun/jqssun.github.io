@@ -26,9 +26,32 @@
 	var renderer;
 	var linesGroup;
 	var lineItems = [];
+	var particleItems = [];
 	var threeContainer;
 	var heroInteractionEnabled = false;
 	var loaderDone = false;
+	var navWarpEnabled = true;
+	var navMoveEnabled = true;
+
+	var INFLUENCE = 640;
+	var STRENGTH = 320;
+	var EASE = 0.16;
+	var IDLE_EASE = 0.08;
+	var PARTICLE_BASE_SCALE = 2;
+	var PARTICLE_BASE_OPACITY = 1;
+	var PARTICLE_HIGHLIGHT_OPACITY = 0.2;
+	var PARTICLE_HIGHLIGHT_SCALE = 0.22;
+	var PARTICLE_BASE_COLOR = new THREE.Color(0xE0E0E0);
+	var PARTICLE_HIGHLIGHT_COLOR = new THREE.Color(0xFF0000);
+	var particleColorScratch = new THREE.Color();
+
+	var baseVector = new THREE.Vector3();
+	var dispVector = new THREE.Vector3();
+	var rightScaled = new THREE.Vector3();
+	var upScaled = new THREE.Vector3();
+	var cameraRight = new THREE.Vector3();
+	var cameraUp = new THREE.Vector3();
+	var projectVector = new THREE.Vector3();
 
 	function createSphereScene(container) {
 		var particles;
@@ -62,6 +85,8 @@
 
 		material = new THREE.SpriteCanvasMaterial({
 			color: 0xE0E0E0,
+			transparent: true,
+			opacity: PARTICLE_BASE_OPACITY,
 			program: function (context) {
 				context.beginPath();
 				context.arc(0, 0, 0.5, 0, PI2, true);
@@ -70,13 +95,22 @@
 		});
 
 		for (i = 0; i < 1000; i++) {
-			particle = new THREE.Sprite(material);
+			particle = new THREE.Sprite(material.clone());
 			particle.position.x = Math.random() * 2 - 1;
 			particle.position.y = Math.random() * 2 - 1;
 			particle.position.z = Math.random() * 2 - 1;
 			particle.position.normalize();
 			particle.position.multiplyScalar(Math.random() * 10 + 360);
-			particle.scale.multiplyScalar(2);
+
+			particleItems.push({
+				sprite: particle,
+				direction: particle.position.clone().normalize(),
+				radius: particle.position.length(),
+				ox: 0,
+				oy: 0
+			});
+
+			particle.scale.setScalar(PARTICLE_BASE_SCALE);
 			scene.add(particle);
 		}
 
@@ -129,22 +163,23 @@
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	}
 
-	function onDocumentMouseMove(event) {
+	function setPointer(clientX, clientY) {
 		if (!heroInteractionEnabled) {
 			return;
 		}
 
 		var dx;
 		var dy;
+		var navAmount = loaderDone ? getNavProgress() : 0;
+		var allowCameraVelocity = navAmount <= 0.001 || navMoveEnabled;
 
-		mouseX = event.clientX - windowHalfX;
-		mouseY = event.clientY - windowHalfY;
-
+		mouseX = clientX - windowHalfX;
+		mouseY = clientY - windowHalfY;
 		lastPointerTime = Date.now();
 
-		if (hasPointerSample) {
-			dx = event.clientX - lastClientX;
-			dy = event.clientY - lastClientY;
+		if (hasPointerSample && allowCameraVelocity) {
+			dx = clientX - lastClientX;
+			dy = clientY - lastClientY;
 			velocityX += dx * 0.04;
 			velocityY += -dy * 0.04;
 
@@ -160,9 +195,123 @@
 			}
 		}
 
-		lastClientX = event.clientX;
-		lastClientY = event.clientY;
+		lastClientX = clientX;
+		lastClientY = clientY;
 		hasPointerSample = true;
+	}
+
+	function onDocumentMouseMove(event) {
+		setPointer(event.clientX, event.clientY);
+	}
+
+	function onDocumentTouchMove(event) {
+		if (!event.touches.length) {
+			return;
+		}
+
+		setPointer(event.touches[0].clientX, event.touches[0].clientY);
+	}
+
+	function onDocumentTouchEnd() {
+		lastPointerTime = 0;
+	}
+
+	function getParticleWarpAmount(item) {
+		return Math.min(1, Math.sqrt(item.ox * item.ox + item.oy * item.oy) / STRENGTH);
+	}
+
+	function applyParticleWarpHighlight(item, warpAmount) {
+		var amount = Math.max(0, Math.min(1, warpAmount));
+
+		if (amount <= 0.001) {
+			resetParticleHighlight(item);
+			return;
+		}
+
+		item.sprite.material.color.copy(
+			particleColorScratch.copy(PARTICLE_BASE_COLOR).lerp(PARTICLE_HIGHLIGHT_COLOR, Math.min(1, amount * 1.25))
+		);
+		item.sprite.material.opacity = Math.min(1, PARTICLE_BASE_OPACITY + amount * PARTICLE_HIGHLIGHT_OPACITY);
+		item.sprite.scale.setScalar(PARTICLE_BASE_SCALE * (1 + amount * PARTICLE_HIGHLIGHT_SCALE));
+	}
+
+	function resetParticleHighlight(item) {
+		item.sprite.material.color.copy(PARTICLE_BASE_COLOR);
+		item.sprite.material.opacity = PARTICLE_BASE_OPACITY;
+		item.sprite.scale.setScalar(PARTICLE_BASE_SCALE);
+	}
+
+	function animateParticles(navAmount) {
+		var i;
+		var item;
+		var pointerActive = heroInteractionEnabled && (Date.now() - lastPointerTime) < POINTER_IDLE_MS;
+		var useGravity = navAmount > 0.001 && navWarpEnabled;
+		var sx;
+		var sy;
+		var dx;
+		var dy;
+		var dist;
+		var force;
+		var tx;
+		var ty;
+		var ease;
+		var depth;
+		var scale;
+		var warpAmount;
+
+		if (!particleItems.length) {
+			return;
+		}
+
+		if (useGravity) {
+			cameraRight.setFromMatrixColumn(camera.matrixWorld, 0);
+			cameraUp.setFromMatrixColumn(camera.matrixWorld, 1);
+		}
+
+		for (i = 0; i < particleItems.length; i++) {
+			item = particleItems[i];
+
+			if (useGravity) {
+				if (pointerActive) {
+					projectVector.copy(item.direction).multiplyScalar(item.radius);
+					projectVector.project(camera);
+					sx = (projectVector.x * 0.5 + 0.5) * window.innerWidth;
+					sy = (-projectVector.y * 0.5 + 0.5) * window.innerHeight;
+
+					dx = lastClientX - sx;
+					dy = lastClientY - sy;
+					dist = Math.sqrt(dx * dx + dy * dy);
+
+					if (dist < INFLUENCE && dist > 0.001) {
+						force = 1 - dist / INFLUENCE;
+						force *= force;
+						tx = (dx / dist) * STRENGTH * force;
+						ty = (dy / dist) * STRENGTH * force;
+						item.ox += (tx - item.ox) * EASE;
+						item.oy += (ty - item.oy) * EASE;
+					}
+				}
+
+				baseVector.copy(item.direction).multiplyScalar(item.radius);
+				depth = baseVector.distanceTo(camera.position);
+				scale = (2 * Math.tan((camera.fov * Math.PI / 180) / 2) * depth) / window.innerHeight;
+
+				rightScaled.copy(cameraRight).multiplyScalar(item.ox * scale);
+				upScaled.copy(cameraUp).multiplyScalar(-item.oy * scale);
+				dispVector.copy(baseVector).add(rightScaled).add(upScaled).normalize().multiplyScalar(item.radius);
+				item.sprite.position.copy(baseVector).lerp(dispVector, navAmount);
+				applyParticleWarpHighlight(item, getParticleWarpAmount(item));
+			} else if (navAmount > 0.001) {
+				item.sprite.position.copy(item.direction).multiplyScalar(item.radius);
+				resetParticleHighlight(item);
+			} else {
+				ease = IDLE_EASE;
+				item.ox += (0 - item.ox) * ease;
+				item.oy += (0 - item.oy) * ease;
+				item.sprite.position.copy(item.direction).multiplyScalar(item.radius);
+				resetParticleHighlight(item);
+			}
+		}
 	}
 
 	function animateLines(time) {
@@ -201,16 +350,17 @@
 		var targetY = -mouseY + 200;
 		var pointerActive = heroInteractionEnabled && (Date.now() - lastPointerTime) < POINTER_IDLE_MS;
 		var friction = pointerActive ? 0.9 : 0.97;
-		var navAmount;
+		var navAmount = loaderDone ? getNavProgress() : 0;
+		var moveBlend = navAmount <= 0.001 ? 1 : (navMoveEnabled ? navAmount : 0);
 
-		if (pointerActive) {
-			camera.position.x += (mouseX - camera.position.x) * 0.05;
-			camera.position.y += (targetY - camera.position.y) * 0.05;
+		if (pointerActive && moveBlend > 0.001) {
+			camera.position.x += (mouseX - camera.position.x) * 0.05 * moveBlend;
+			camera.position.y += (targetY - camera.position.y) * 0.05 * moveBlend;
 		}
 
-		if (heroInteractionEnabled) {
-			camera.position.x += velocityX;
-			camera.position.y += velocityY;
+		if (heroInteractionEnabled && moveBlend > 0.001) {
+			camera.position.x += velocityX * moveBlend;
+			camera.position.y += velocityY * moveBlend;
 
 			velocityX *= friction;
 			velocityY *= friction;
@@ -221,10 +371,14 @@
 			if (Math.abs(velocityY) < 0.008) {
 				velocityY = 0;
 			}
+		} else if (navAmount > 0.001 && navWarpEnabled && !navMoveEnabled) {
+			velocityX = 0;
+			velocityY = 0;
+			camera.position.x += (0 - camera.position.x) * 0.06 * navAmount;
+			camera.position.y += (200 - camera.position.y) * 0.06 * navAmount;
 		}
 
 		if (loaderDone) {
-			navAmount = getNavProgress();
 			camera.position.z = HERO_CAMERA_Z + (NAV_CAMERA_Z - HERO_CAMERA_Z) * navAmount;
 		}
 
@@ -233,8 +387,10 @@
 
 	function renderFrame() {
 		var time = Date.now() * 0.001;
+		var navAmount = loaderDone ? getNavProgress() : 0;
 
 		updateCamera();
+		animateParticles(navAmount);
 		animateLines(time);
 
 		renderer.setClearColor(0x000000, 0);
@@ -336,11 +492,41 @@
 		revealHeroUi();
 	}
 
+	function syncInteractionFlags() {
+		navWarpEnabled = !!document.querySelector(".sphere-interaction-toggle__option[data-mode=\"warp\"].is-active");
+		navMoveEnabled = !!document.querySelector(".sphere-interaction-toggle__option[data-mode=\"move\"].is-active");
+	}
+
+	function initInteractionToggle() {
+		var toggle = document.querySelector(".sphere-interaction-toggle");
+		var options;
+		var i;
+
+		if (!toggle) {
+			return;
+		}
+
+		options = toggle.querySelectorAll(".sphere-interaction-toggle__option");
+		syncInteractionFlags();
+
+		for (i = 0; i < options.length; i++) {
+			options[i].addEventListener("click", function () {
+				this.classList.toggle("is-active");
+				this.setAttribute("aria-pressed", this.classList.contains("is-active") ? "true" : "false");
+				syncInteractionFlags();
+			});
+		}
+	}
+
 	function init() {
 		var hero = document.getElementById("hero");
 
 		document.addEventListener("mousemove", onDocumentMouseMove, false);
+		document.addEventListener("touchmove", onDocumentTouchMove, { passive: true });
+		document.addEventListener("touchend", onDocumentTouchEnd, false);
+		document.addEventListener("touchcancel", onDocumentTouchEnd, false);
 		window.addEventListener("resize", onWindowResize, false);
+		initInteractionToggle();
 
 		try {
 			if (typeof THREE === "undefined" || typeof THREE.CanvasRenderer === "undefined") {

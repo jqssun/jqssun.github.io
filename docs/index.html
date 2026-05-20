@@ -53,7 +53,7 @@
 			},
 			contact: {
 				email: "jqssun+web@googlemail.com",
-				callToAction: "un petit coucou?"
+				callToAction: "say hi"
 			},
 			locations: {
 				london: {
@@ -102,7 +102,7 @@
 			},
 			work: {
 				heading: "selected projects",
-				description: "things I built for the masses"
+				description: "things i built for the masses"
 			},
 			projects: [
 				{
@@ -238,6 +238,10 @@
 				close: "close",
 				nextProject: "next thing",
 				previousProject: "prev thing"
+			},
+			sphereInteraction: {
+				warp: "warp",
+				move: "drift"
 			}
 		};
 	</script>
@@ -329,6 +333,11 @@
 				<a href="#" class="close-button bottom"></a>
 			</div>
 		</section>
+
+		<div class="sphere-interaction-toggle" role="group" aria-label="Sphere interaction modes" hidden>
+			<button type="button" class="sphere-interaction-toggle__option is-active" data-mode="warp" aria-pressed="true"></button>
+			<button type="button" class="sphere-interaction-toggle__option is-active" data-mode="move" aria-pressed="true"></button>
+		</div>
 	</main>
 
 	<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r83/examples/js/renderers/Projector.js"

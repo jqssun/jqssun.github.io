@@ -170,4 +170,7 @@
 
     setText(".ajax-section__project-navigation .next a", s.navigation.nextProject);
     setText(".ajax-section__project-navigation .prev a", s.navigation.previousProject);
+
+    setText(".sphere-interaction-toggle__option[data-mode=\"warp\"]", s.sphereInteraction.warp);
+    setText(".sphere-interaction-toggle__option[data-mode=\"move\"]", s.sphereInteraction.move);
 }());
