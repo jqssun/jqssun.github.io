@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+	<meta charset="utf-8">
+
+	<script>
+		document.title = "jqssun | projects";
+	</script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="author" content="jqssun">
+	<meta name="description"
+		content="projects by jqssun">
+	<link rel="icon" type="image/svg+xml" href="images/favicon.svg" />
+
+	<meta property="og:title" content="jqssun | projects">
+	<meta property="og:url" content="index.html">
+	<meta property="og:description"
+		content="projects by jqssun">
+	<meta property="og:image" content="images/logo.svg">
+	<meta property="og:image:type" content="image/svg+xml">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:site_name" content="jqssun">
+	<meta property="og:type" content="website">
+
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap-reboot.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap-grid.min.css" />
+	<link rel="stylesheet" href="css/main.css" />
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+</head>
+
+<body>
+
+	<script>
+		window.site = {
+			company: {
+				name: "jqssun",
+				tagline: "maker of things",
+				logo: "images/logo.svg",
+				logoAlt: "jqssun"
+			},
+			contact: {
+				email: "jqssun+web@googlemail.com",
+				callToAction: "un petit coucou?"
+			},
+			locations: {
+				london: {
+					label: "locate me",
+					hover: "london",
+					url: "#"
+				},
+				phone: {
+					label: "phone me",
+					hover: "call",
+					url: "tel:"
+				}
+			},
+			social: {
+				github: {
+					url: "https://www.github.com/jqssun/",
+					label: "GitHub"
+				},
+				twitter: {
+					url: "https://x.com/jqssun/",
+					label: "𝕏"
+				}
+			},
+			hero: {
+				title: "projects",
+				subtitle: "built by jqssun",
+				buttonTop: "about",
+				buttonBottom: "work"
+			},
+			about: {
+				heading: "about",
+				description: "i build things"
+			},
+			services: {
+				heading: "things i can do",
+				items: [
+					"sw: infra, networking, sysadmin",
+					"hw: pcb, sensors, soc",
+					"+ all things aero & mech too"
+				]
+			},
+			awards: {
+				heading: "member of",
+				items: [
+					{ name: "ucam", image: "https://www.cam.ac.uk/sites/all/themes/fresh/images/interface/cambridge_university2.svg", invert: true },
+					{ name: "cues", image: "https://www.cues.org.uk/wp-content/themes/cues-theme/assets/img/logo_white.svg" }
+				]
+			},
+			work: {
+				heading: "selected projects",
+				description: "things I built for the masses"
+			},
+			projects: [
+				{
+					id: "250905",
+					category: "Services",
+					icon_google: "wallet",
+					name: "Boarding Pass Reader",
+					summary: "First open-source spec-compliant solution with support for Version 8 of IATA Resolution 792",
+					details: "A public service with open-source library and API for decoding and encoding IATA Bar Coded Boarding Pass (BCBP) data, compliant with the current version of IATA Resolution 792.",
+					preview: "https://jqs.app/iata",
+					source: "https://github.com/jqssun/iata-api"
+				},
+				{
+					id: "260407",
+					category: "Android",
+					name: "Screen Mirroring Hub",
+					summary: "First open-source solution to mirror Android screen via AirPlay, Moonlight, and DisplayLink",
+					details: "A fully free and open-source solution that forwards Android screen content to external displays via alternative protocols and expands Android's built-in screen mirroring capabilities.",
+					icon_google: "screen_share",
+					video: "https://github.com/jqssun/android-display-mirror/releases/download/v0.0.1/0.mp4",
+					source: "https://github.com/jqssun/android-display-mirror"
+				},
+				{
+					id: "260408",
+					category: "Android",
+					name: "AirPlay Receiver for Android",
+					summary: "First open-source AirPlay mirroring receiver for Android and TVs",
+					details: "A fully featured free and open-source implementation of AirPlay for Android that turns your device into an AirPlay-compatible display and speaker. Supports screen mirroring and audio streaming with complete codec support and adjustable bitrate, as well as music streaming with track information, cover art and playback controls.",
+					icon_google: "airplay",
+					image: "https://github.com/jqssun/android-airplay-server/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png?raw=true",
+					source: "https://github.com/jqssun/android-airplay-server"
+				},
+				{
+					id: "250719",
+					category: "Services",
+					icon_google: "shoppingmode",
+					name: "GTIN Lookup (UK)",
+					summary: "Public service groceries API solution with open-source frontend library",
+					details: "Independent tool for retrieving product information (groceries) by scanning barcodes or entering the item's Global Trade Item Number (GTIN). Provided a match is found, you can view the product name, brand, current online retail pricing, per unit pricing, promotions, loyalty offers and stock levels across grocery chains.",
+					preview: "https://jqs.app/gtin",
+					source: "https://github.com/jqssun/gtin-web"
+				},
+				{
+					id: "260406",
+					category: "Android",
+					name: "Display Manager for Android",
+					summary: "An all-purpose Android display manager for any connected physical or virtual display",
+					details: "This tool builds on top of Android desktop experience features, and allows you to place any application on any display and drive it with a built-in multi-touch virtual touchpad, an on-screen keyboard, a physical touchscreen, or any external input device connected to Android.",
+					icon_google: "connected_tv",
+					image: "https://github.com/jqssun/android-display-extend/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png?raw=true",
+					source: "https://github.com/jqssun/android-display-extend"
+				},
+				{
+					id: "251009",
+					category: "Android",
+					name: "Helium Browser for Android",
+					summary: "Private and secure mobile chromium with support for extensions (including uBlock Origin)",
+					details: "An open-source private and secure Android browser with full support for browser extensions recommended by the Android community.",
+					icon: "https://github.com/GrapheneOS/apps.grapheneos.org/blob/main/apps/packages/app.vanadium.browser/icon.webp?raw=true",
+					image: "https://github.com/jqssun/android-helium-browser/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png?raw=true",
+					source: "https://github.com/jqssun/android-helium-browser"
+				},
+				{
+					id: "251011",
+					category: "Android",
+					name: "LineageOS for QEMU",
+					summary: "LineageOS builds for running Android virtual machines in QEMU on macOS/iOS devices",
+					details: "Use this to run Android on any macOS/iOS device (via UTM) or generic libvirt QEMU virtual machines.",
+					icon_google: "android",
+					image: "https://github.com/user-attachments/assets/442b5d82-1b32-4702-b3c1-70c6b033ee58",
+					source: "https://github.com/jqssun/android-lineage-qemu"
+				},
+				{
+					id: "260324",
+					category: "Android",
+					name: "MAC Editor for Android",
+					summary: "Securely edit Wi-Fi MAC address on Android",
+					details: "A free and open-source module that gives you granular control over the Wi-Fi MAC address on Android devices. It supports manual MAC override and enables native MAC randomization support exposed by Android on supported hardware regardless of the OEM's implementation.",
+					icon_google: "network_manage",
+					image: "https://github.com/jqssun/android-mac-editor/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png?raw=true",
+					source: "https://github.com/jqssun/android-mac-editor"
+				},
+				{
+					id: "250407",
+					category: "SaaS",
+					name: "mlop.ai",
+					summary: "Next generation fast and efficient MLOps platform",
+					details: "A modern self-hostable experiment tracking tool for those who train ML models with an ingestion engine built in Rust.",
+					icon: "https://github.com/mlop-ai/mlop/blob/main/design/favicon.svg?raw=true",
+					preview: "https://docs.mlop.ai",
+					source: "https://github.com/mlop-ai"
+				},
+				{
+					id: "250307",
+					category: "Android",
+					name: "Secure Element Access",
+					summary: "Provide access to secure element for trusted apps on Android",
+					details: "A module to explicitly give trusted apps access to the secure element (eSE) by using a safer application ID based implementation, regardless of the ARF configuration on the eUICC. Additionally, it provides a way to toggle between eSIM and UIM modes for devices with non-removable eUICC.",
+					source: "https://github.com/jqssun/android-se-access"
+				},
+				{
+					id: "250227",
+					category: "Android",
+					name: "GPS Setter for Android",
+					summary: "First open-source GPS setter for rooted Android 15",
+					details: "A GPS setter based on the Xposed framework.",
+					video: "https://github.com/user-attachments/assets/fbc0901c-b126-4ca7-9239-34390a76e7f9",
+					source: "https://github.com/jqssun/android-gps-setter"
+				},
+				{
+					id: "231116",
+					category: "Aero",
+					name: "Turbine Design Project",
+					summary: "Presented in 12th PRIMaRE conference 2025",
+					details: "This work was originally the Master's project of the author, who later expanded it and presented it at the 12th PRIMaRE conference in 2025 in Bristol, UK. The work was awarded James Dyson Foundation Bursary, initially partially sponsored by Rolls-Royce plc., and later conducted in Whittle Laboratory, University of Cambridge, where we performed CFD and wind tunnel experiments on a custom developed test rig.",
+					icon: "http://jqssun.gitlab.io/slides/src/intro/turbine.png",
+					preview: "https://jqssun.gitlab.io/slides",
+					source: "https://gitlab.com/jqssun/a-jrf55-1"
+				},
+				{
+					id: "250626",
+					category: "Aero",
+					name: "Marine Cloud Brightening Project",
+					summary: "Presented in Arctic Repair Conference 2025",
+					details: "This work was done at the University of Cambridge in collaboration with Cranfield University where we performed CFD and initial experiments for the design and routing of marine cloud brightening vessels."
+				}
+			],
+			cta: {
+				heading: "say hello",
+				text: "email"
+			},
+			navigation: {
+				close: "close",
+				nextProject: "next thing",
+				previousProject: "prev thing"
+			}
+		};
+	</script>
+	<script src="js/utils.js"></script>
+	<main role="main">
+		<section id="hero" class="hero dark sphere">
+			<div class="hero__content">
+				<h1></h1>
+				<h2></h2>
+			</div>
+
+			<a href="#" class="hero__trigger-button top"></a>
+			<a href="#" class="hero__trigger-button bottom"></a>
+
+			<a href="index.html"><img class="logo" src="images/logo.svg" alt=""></a>
+
+			<div class="meta name">
+				<a href="mailto:">
+					<p><small></small></p>
+				</a>
+			</div>
+
+			<div class="meta social">
+				<ul class="social-links"></ul>
+			</div>
+
+			<div class="meta social" style="right: 2.5rem;left: initial;">
+				<ul class="location-links"></ul>
+			</div>
+		</section>
+
+		<section id="about" class="about idle">
+			<div class="about__content">
+				<div class="container">
+					<div class="row">
+						<div
+							class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 about__content__box first">
+							<h5></h5>
+							<p></p>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 about__content__box">
+							<h5></h5>
+							<ul class="services"></ul>
+						</div>
+					</div>
+					<div class="about__content__full-box">
+						<div class="row">
+							<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+								<h5></h5>
+								<ul class="client-list"></ul>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 about__content__box last">
+							<h5></h5>
+							<p></p>
+						</div>
+					</div>
+				</div>
+				<a href="#" class="close-button top"></a>
+			</div>
+		</section>
+
+		<section id="work" class="work idle">
+			<div class="work__content">
+				<div class="container">
+					<div class="row">
+						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 work__content__box first">
+							<h5></h5>
+							<p></p>
+						</div>
+					</div>
+
+					<div class="ajax-section clearfix">
+						<div class="ajax-section__loader"></div>
+						<div class="ajax-section__project-navigation">
+							<ul>
+								<li class="next"><a href="#"></a></li>
+								<li class="prev"><a href="#"></a></li>
+							</ul>
+						</div>
+						<div class="ajax-section__project-close">
+							<a href="#"></a>
+						</div>
+						<div class="ajax-section__content"></div>
+					</div>
+
+					<div class="row work__content__thumbnails"></div>
+
+					<div class="row">
+						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 about__content__box last">
+							<h5></h5>
+							<p></p>
+						</div>
+					</div>
+				</div>
+				<a href="#" class="close-button bottom"></a>
+			</div>
+		</section>
+	</main>
+
+	<script src="https://cdn.jsdelivr.net/gh/Gaya/queryloader2@master/queryloader2.min.js"
+		type="text/javascript"></script>
+
+	<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r83/examples/js/renderers/Projector.js"
+		type="text/javascript"></script>
+	<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r83/examples/js/renderers/CanvasRenderer.js"
+		type="text/javascript"></script>
+	<script src="js/3d/sphere-dark.js" type="text/javascript"></script>
+
+	<script src="js/dot-field.js" type="text/javascript"></script>
+	<script src="js/init.js" type="text/javascript"></script>
+	<script src="js/main.js" type="text/javascript"></script>
+</body>
+
+</html>
