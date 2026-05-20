@@ -16,7 +16,7 @@
             return "";
         }
 
-        value = project.summary != null ? project.summary : project.desc;
+        value = project.summary;
 
         if (value != null && String(value).trim() !== "") {
             return String(value).trim();

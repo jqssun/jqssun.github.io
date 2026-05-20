@@ -4,8 +4,8 @@
 	var SCREEN_WIDTH = window.innerWidth;
 	var SCREEN_HEIGHT = window.innerHeight;
 	var HERO_CAMERA_Z = 1000;
-	var NAV_CAMERA_Z = 320;
-	var LOADER_CAMERA_START_Z = 3400;
+	var NAV_CAMERA_Z = 240;
+	var LOADER_CAMERA_START_Z = 3200;
 	var LOADER_MIN_MS = 1200;
 
 	var mouseX = 0;
@@ -18,7 +18,11 @@
 	var lastPointerTime = 0;
 	var velocityX = 0;
 	var velocityY = 0;
-	var POINTER_IDLE_MS = 120;
+	var IS_TOUCH_DEVICE = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+	var POINTER_IDLE_MS = IS_TOUCH_DEVICE ? 450 : 120;
+	var VELOCITY_SCALE = IS_TOUCH_DEVICE ? 0.07 : 0.04;
+	var MOBILE_INFLUENCE_SCALE = IS_TOUCH_DEVICE ? 1.45 : 1;
+	var MOBILE_STRENGTH_SCALE = IS_TOUCH_DEVICE ? 1.3 : 1;
 	var MAX_VELOCITY = 7;
 
 	var camera;
@@ -27,22 +31,21 @@
 	var linesGroup;
 	var lineItems = [];
 	var particleItems = [];
-	var threeContainer;
 	var heroInteractionEnabled = false;
 	var loaderDone = false;
 	var navWarpEnabled = true;
 	var navMoveEnabled = true;
 
-	var INFLUENCE = 640;
-	var STRENGTH = 320;
+	var INFLUENCE = 320;
+	var STRENGTH = 160;
 	var EASE = 0.16;
 	var IDLE_EASE = 0.08;
 	var PARTICLE_BASE_SCALE = 2;
 	var PARTICLE_BASE_OPACITY = 1;
 	var PARTICLE_HIGHLIGHT_OPACITY = 0.2;
-	var PARTICLE_HIGHLIGHT_SCALE = 0.22;
+	var PARTICLE_HIGHLIGHT_SCALE = 0.16;
 	var PARTICLE_BASE_COLOR = new THREE.Color(0xE0E0E0);
-	var PARTICLE_HIGHLIGHT_COLOR = new THREE.Color(0xFF0000);
+	var PARTICLE_HIGHLIGHT_COLOR = new THREE.Color(0x00FF00);
 	var particleColorScratch = new THREE.Color();
 
 	var baseVector = new THREE.Vector3();
@@ -69,7 +72,6 @@
 
 		wrap.className = "hero__three-container";
 		container.appendChild(wrap);
-		threeContainer = wrap;
 
 		camera = new THREE.PerspectiveCamera(75, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 10000);
 		camera.position.z = HERO_CAMERA_Z;
@@ -163,6 +165,14 @@
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	}
 
+	function getWarpInfluence() {
+		return INFLUENCE * MOBILE_INFLUENCE_SCALE;
+	}
+
+	function getWarpStrength() {
+		return STRENGTH * MOBILE_STRENGTH_SCALE;
+	}
+
 	function setPointer(clientX, clientY) {
 		if (!heroInteractionEnabled) {
 			return;
@@ -180,8 +190,8 @@
 		if (hasPointerSample && allowCameraVelocity) {
 			dx = clientX - lastClientX;
 			dy = clientY - lastClientY;
-			velocityX += dx * 0.04;
-			velocityY += -dy * 0.04;
+			velocityX += dx * VELOCITY_SCALE;
+			velocityY += -dy * VELOCITY_SCALE;
 
 			if (velocityX > MAX_VELOCITY) {
 				velocityX = MAX_VELOCITY;
@@ -204,6 +214,14 @@
 		setPointer(event.clientX, event.clientY);
 	}
 
+	function onDocumentTouchStart(event) {
+		if (!event.touches.length) {
+			return;
+		}
+
+		setPointer(event.touches[0].clientX, event.touches[0].clientY);
+	}
+
 	function onDocumentTouchMove(event) {
 		if (!event.touches.length) {
 			return;
@@ -213,11 +231,11 @@
 	}
 
 	function onDocumentTouchEnd() {
-		lastPointerTime = 0;
+		lastPointerTime = Date.now();
 	}
 
 	function getParticleWarpAmount(item) {
-		return Math.min(1, Math.sqrt(item.ox * item.ox + item.oy * item.oy) / STRENGTH);
+		return Math.min(1, Math.sqrt(item.ox * item.ox + item.oy * item.oy) / getWarpStrength());
 	}
 
 	function applyParticleWarpHighlight(item, warpAmount) {
@@ -257,7 +275,9 @@
 		var ease;
 		var depth;
 		var scale;
-		var warpAmount;
+
+		var warpInfluence = getWarpInfluence();
+		var warpStrength = getWarpStrength();
 
 		if (!particleItems.length) {
 			return;
@@ -282,11 +302,11 @@
 					dy = lastClientY - sy;
 					dist = Math.sqrt(dx * dx + dy * dy);
 
-					if (dist < INFLUENCE && dist > 0.001) {
-						force = 1 - dist / INFLUENCE;
+					if (dist < warpInfluence && dist > 0.001) {
+						force = 1 - dist / warpInfluence;
 						force *= force;
-						tx = (dx / dist) * STRENGTH * force;
-						ty = (dy / dist) * STRENGTH * force;
+						tx = (dx / dist) * warpStrength * force;
+						ty = (dy / dist) * warpStrength * force;
 						item.ox += (tx - item.ox) * EASE;
 						item.oy += (ty - item.oy) * EASE;
 					}
@@ -427,11 +447,6 @@
 		var pageReady = false;
 		var zoomDone = false;
 
-		function beginUiReveal() {
-			document.body.classList.remove("is-loading");
-			revealHeroUi();
-		}
-
 		function maybeFinish() {
 			if (!pageReady || !zoomDone || loaderDone) {
 				return;
@@ -463,11 +478,10 @@
 			maybeFinish();
 		}
 
-		document.body.classList.add("is-loading");
 		createSphereScene(hero);
 		camera.position.z = LOADER_CAMERA_START_Z;
 		renderFrame();
-		beginUiReveal();
+		revealHeroUi();
 
 		if (document.readyState === "complete") {
 			pageReady = true;
@@ -488,7 +502,6 @@
 	}
 
 	function finishLoadingFallback() {
-		document.body.classList.remove("is-loading");
 		revealHeroUi();
 	}
 
@@ -522,6 +535,7 @@
 		var hero = document.getElementById("hero");
 
 		document.addEventListener("mousemove", onDocumentMouseMove, false);
+		document.addEventListener("touchstart", onDocumentTouchStart, { passive: true });
 		document.addEventListener("touchmove", onDocumentTouchMove, { passive: true });
 		document.addEventListener("touchend", onDocumentTouchEnd, false);
 		document.addEventListener("touchcancel", onDocumentTouchEnd, false);
@@ -535,14 +549,6 @@
 
 			if (hero) {
 				runLoaderZoom();
-				return;
-			}
-
-			if (hero) {
-				createSphereScene(hero);
-				heroInteractionEnabled = true;
-				animate();
-				revealHeroUi();
 			}
 		} catch (err) {
 			finishLoadingFallback();
@@ -551,10 +557,10 @@
 				try {
 					createSphereScene(hero);
 					heroInteractionEnabled = true;
+					loaderDone = true;
 					animate();
-					revealHeroUi();
 				} catch (innerErr) {
-					// Hero sphere unavailable; page content still usable.
+					// sphere unavailable
 				}
 			}
 		}

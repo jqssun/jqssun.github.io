@@ -286,6 +286,13 @@ main .close-button.bottom {
     initial-value: 0
 }
 
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --chrome-top: max(2.5rem, calc(var(--safe-top) + 0.75rem));
+    --chrome-bottom: max(2.5rem, calc(var(--safe-bottom) + 0.75rem))
+}
+
 main {
     position: absolute;
     width: 100%;
@@ -362,12 +369,16 @@ main.is-nav-work .sphere-interaction-toggle {
 
 main.is-nav-about .sphere-interaction-toggle {
     top: auto;
-    bottom: 40px
+    bottom: var(--chrome-bottom)
 }
 
 main.is-nav-work .sphere-interaction-toggle {
-    top: 40px;
+    top: var(--chrome-top);
     bottom: auto
+}
+
+main.is-nav-work:has(.ajax-section__content.active-ajax) .sphere-interaction-toggle {
+    display: none
 }
 
 .sphere-interaction-toggle__option + .sphere-interaction-toggle__option {
@@ -379,7 +390,8 @@ main.is-nav-work .sphere-interaction-toggle {
     font-size: .875rem;
     font-weight: bold;
     line-height: 1;
-    padding: .5rem .875rem;
+    padding: .625rem 1rem;
+    min-height: 44px;
     border: 0;
     background: transparent;
     color: #7B8085;
@@ -452,7 +464,8 @@ main .meta.name p {
     position: absolute;
     z-index: 1;
     overflow: hidden;
-    width: 100%
+    width: 100%;
+    touch-action: manipulation
 }
 
 .hero__three-container {
@@ -609,14 +622,14 @@ main.is-nav-driven:has(#work.active-screen) #hero .hero__trigger-button {
     position: fixed;
     z-index: 25;
     opacity: 1;
-    top: 40px;
+    top: var(--chrome-top);
     bottom: auto;
     color: #E0E0E0
 }
 
 .about.active-screen .close-button:hover {
     opacity: 1;
-    top: 35px;
+    top: calc(var(--chrome-top) - 5px);
     bottom: auto;
     transform: translateX(-50%)
 }
@@ -687,23 +700,18 @@ main.is-nav-driven:has(#work.active-screen) #hero .hero__trigger-button {
 .about__content__full-box {
     width: 100%;
     margin-top: 2.8125rem;
-    padding-top: 2.8125rem;
-    padding-bottom: 2.8125rem
+    padding-bottom: calc(var(--chrome-bottom) + 3.5rem)
 }
 
 @media (min-width: 768px) {
     .about__content__full-box {
-        margin-top: 4.0625rem;
-        padding-top: 4.0625rem;
-        padding-bottom: 4.0625rem
+        margin-top: 4.0625rem
     }
 }
 
 @media (min-width: 992px) {
     .about__content__full-box {
-        margin-top: 5.625rem;
-        padding-top: 5.625rem;
-        padding-bottom: 5.625rem
+        margin-top: 5.625rem
     }
 }
 
@@ -787,14 +795,14 @@ main.is-nav-driven:has(#work.active-screen) #hero .hero__trigger-button {
     position: fixed;
     z-index: 25;
     opacity: 1;
-    bottom: 40px;
+    bottom: var(--chrome-bottom);
     top: auto;
     color: #E0E0E0
 }
 
 .work.active-screen .close-button:hover {
     opacity: 1;
-    bottom: 35px;
+    bottom: calc(var(--chrome-bottom) - 5px);
     top: auto;
     transform: translateX(-50%)
 }
@@ -1340,9 +1348,14 @@ main.is-nav-driven:has(#work.active-screen) #hero .hero__trigger-button {
     margin-bottom: 0
 }
 
-.work__content .ajax-section__content .ajaxpage__content--meta li h4 {
+.work__content .ajax-section__content .ajaxpage__content--meta li h4,
+.work__content .ajax-section__content .ajaxpage__content--description > h4 {
     margin: 0;
     color: #fff
+}
+
+.work__content .ajax-section__content .ajaxpage__content--description > h4 {
+    margin-bottom: .9375rem
 }
 
 .work__content .ajax-section__content .ajaxpage__content--meta li small {

@@ -149,9 +149,27 @@
         snapTimer = setTimeout(snapNavigationProgress, 150);
     }
 
+    function aboutBottomClipped() {
+        var panel = about[0];
+        var fullBox = panel && panel.querySelector(".about__content__full-box");
+
+        if (!fullBox) {
+            return false;
+        }
+
+        return fullBox.getBoundingClientRect().bottom > panel.getBoundingClientRect().bottom + 2;
+    }
+
     function shouldAllowInternalScroll(deltaY) {
         if (navProgress >= 1) {
-            if (about[0].scrollTop > 0) {
+            var aboutEl = about[0];
+            var atBottom = aboutEl.scrollTop + aboutEl.clientHeight >= aboutEl.scrollHeight - 1;
+
+            if (deltaY > 0 && (aboutEl.scrollTop <= 0 || atBottom)) {
+                return false;
+            }
+
+            if (aboutEl.scrollTop > 0 || deltaY < 0) {
                 return true;
             }
 
@@ -170,6 +188,10 @@
     }
 
     var touchLastY = null;
+    var touchStartX = null;
+    var touchStartY = null;
+    var touchGestureAxis = null;
+    var GESTURE_LOCK_PX = 14;
 
     function isInteractiveTouchTarget(target) {
         if (!target || !target.closest) {
@@ -195,6 +217,23 @@
             return;
         }
 
+        if (navProgress >= 1 && deltaY > 0 && aboutBottomClipped()) {
+            var aboutEl = about[0];
+            var prevScrollTop = aboutEl.scrollTop;
+
+            aboutEl.scrollTop = Math.min(
+                prevScrollTop + Math.max(Math.abs(deltaY), 40),
+                aboutEl.scrollHeight - aboutEl.clientHeight
+            );
+
+            if (aboutEl.scrollTop > prevScrollTop) {
+                if (e && e.cancelable) {
+                    e.preventDefault();
+                }
+                return;
+            }
+        }
+
         if (shouldAllowInternalScroll(deltaY)) {
             return;
         }
@@ -211,29 +250,54 @@
         handleScrollDelta(e.deltaY, e);
     }
 
+    function resetTouchGesture() {
+        touchLastY = null;
+        touchStartX = null;
+        touchStartY = null;
+        touchGestureAxis = null;
+    }
+
     function onTouchStart(e) {
         if (e.touches.length !== 1 || isInteractiveTouchTarget(e.target)) {
-            touchLastY = null;
+            resetTouchGesture();
             return;
         }
 
-        touchLastY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchLastY = touchStartY;
+        touchGestureAxis = null;
     }
 
     function onTouchMove(e) {
-        if (touchLastY === null || e.touches.length !== 1 || isInteractiveTouchTarget(e.target)) {
+        if (touchLastY === null || touchStartX === null || touchStartY === null ||
+            e.touches.length !== 1 || isInteractiveTouchTarget(e.target)) {
             return;
         }
 
+        var x = e.touches[0].clientX;
         var y = e.touches[0].clientY;
+        var totalDx = x - touchStartX;
+        var totalDy = y - touchStartY;
         var deltaY = touchLastY - y;
+        var absDx = Math.abs(totalDx);
+        var absDy = Math.abs(totalDy);
+
+        if (!touchGestureAxis && (absDx > GESTURE_LOCK_PX || absDy > GESTURE_LOCK_PX)) {
+            touchGestureAxis = absDx > absDy ? "x" : "y";
+        }
 
         touchLastY = y;
+
+        if (!touchGestureAxis || touchGestureAxis === "x") {
+            return;
+        }
+
         handleScrollDelta(deltaY, e);
     }
 
     function onTouchEnd() {
-        touchLastY = null;
+        resetTouchGesture();
         scheduleSnap();
     }
 
@@ -314,7 +378,6 @@
                 U.escapeHtml(U.formatProjectHost(visitUrl)) + "</small></a></li>";
         }
 
-        metaHtml += "<li><h4>Project</h4><p>" + U.escapeHtml(project.name) + "</p></li>";
         metaHtml += "<li><h4>Category</h4><p>" + U.escapeHtml(project.category) + "</p></li>";
 
         if (U.projectSummary(project)) {
@@ -324,6 +387,16 @@
         if (project.source) {
             metaHtml += "<li><h4>Source</h4><p><a href=\"" + U.escapeHtml(project.source) + "\" target=\"_blank\" rel=\"noopener\">" +
                 U.escapeHtml(U.formatProjectHost(project.source)) + "</a></p></li>";
+        }
+
+        if (project.privacy) {
+            metaHtml += "<li><h4>Privacy</h4><p><a href=\"" + U.escapeHtml(project.privacy) + "\" target=\"_blank\" rel=\"noopener\">" +
+                U.escapeHtml(U.formatProjectHost(project.privacy)) + "</a></p></li>";
+        }
+
+        if (project.support) {
+            metaHtml += "<li><h4>Support</h4><p><a href=\"mailto:" + U.escapeHtml(project.support) + "\">" +
+                U.escapeHtml(project.support) + "</a></p></li>";
         }
 
         if (project.details) {
@@ -339,6 +412,8 @@
         page = $("<section id=\"ajaxpage\" class=\"ajaxpage\"></section>");
         content = $("<div class=\"ajaxpage__content clearfix\"></div>");
         desc = $("<div class=\"ajaxpage__content--description\"></div>");
+
+        desc.append($("<h4></h4>").text(project.name));
 
         if (detailsHtml) {
             desc.append(detailsHtml);
