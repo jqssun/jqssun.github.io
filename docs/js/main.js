@@ -2,6 +2,7 @@
     "use strict";
 
     var U = window.siteUtils;
+    var main = $("main");
     var hero = $("#hero");
     var work = $("#work");
     var about = $("#about");
@@ -10,18 +11,9 @@
     var closeBottom = $(".close-button.bottom");
     var closeTop = $(".close-button.top");
 
-    $("body").queryLoader2({
-        backgroundColor: "#fff",
-        fadeOutTime: 500
-    });
-
     function centerInit() {
         hero.css({
             height: $(window).height()
-        });
-
-        $(".hero__content").css({
-            "margin-top": ($(window).height() - $(".hero__content").height()) / 2 + "px"
         });
 
         about.css({
@@ -37,35 +29,229 @@
     $(window).resize(centerInit);
     window.centerInit = centerInit;
 
+    var NAV_DURATION = 500;
+    var SCROLL_SENSITIVITY = 0.64;
+    var navProgress = 0;
+    var navAnimating = false;
+    var snapTimer;
+
+    function scrollRange() {
+        return $(window).height() * SCROLL_SENSITIVITY;
+    }
+
+    function clampProgress(value) {
+        return Math.max(-1, Math.min(1, value));
+    }
+
+    function syncNavigationState() {
+        var aboutVisible = navProgress > 0;
+        var workVisible = navProgress < 0;
+        var aboutInteractive = navProgress >= 1;
+        var workInteractive = navProgress <= -1;
+
+        about.toggleClass("active-screen", aboutVisible).toggleClass("idle", !aboutVisible);
+        work.toggleClass("active-screen", workVisible).toggleClass("idle", !workVisible);
+        about.css("pointer-events", aboutInteractive ? "" : "none");
+        work.css("pointer-events", workInteractive ? "" : "none");
+        closeTop.css("opacity", Math.min(1, Math.max(0, navProgress)));
+        closeBottom.css("opacity", Math.min(1, Math.max(0, -navProgress)));
+    }
+
+    function applyNavigationProgress(progress) {
+        navProgress = clampProgress(progress);
+        main.addClass("is-nav-driven").removeClass("is-nav-animating");
+        main[0].style.setProperty("--nav-progress", navProgress);
+        syncNavigationState();
+    }
+
+    function animateNavigationProgress(target, duration) {
+        duration = duration || NAV_DURATION;
+        target = clampProgress(target);
+
+        if (navAnimating) {
+            return;
+        }
+
+        navAnimating = true;
+        main.addClass("is-nav-driven").removeClass("is-nav-animating");
+        main[0].style.setProperty("--nav-progress", navProgress);
+        main[0].style.setProperty("--nav-transition-duration", duration + "ms");
+        void main[0].offsetWidth;
+
+        main.addClass("is-nav-animating");
+        navProgress = target;
+        main[0].style.setProperty("--nav-progress", target);
+
+        setTimeout(function () {
+            main.removeClass("is-nav-animating");
+            navAnimating = false;
+            syncNavigationState();
+        }, duration);
+    }
+
+    function openAbout() {
+        if (navProgress >= 1 || navAnimating) {
+            return;
+        }
+
+        animateNavigationProgress(1);
+    }
+
+    function closeAbout() {
+        if (navProgress <= 0 || navAnimating) {
+            return;
+        }
+
+        animateNavigationProgress(0);
+    }
+
+    function openWork() {
+        if (navProgress <= -1 || navAnimating) {
+            return;
+        }
+
+        animateNavigationProgress(-1);
+    }
+
+    function closeWork() {
+        if (navProgress >= 0 || navAnimating) {
+            return;
+        }
+
+        animateNavigationProgress(0);
+    }
+
+    function snapNavigationProgress() {
+        var target = navProgress;
+
+        if (navProgress > 0 && navProgress < 1) {
+            target = navProgress >= 0.5 ? 1 : 0;
+        } else if (navProgress < 0 && navProgress > -1) {
+            target = navProgress <= -0.5 ? -1 : 0;
+        }
+
+        if (target !== navProgress) {
+            animateNavigationProgress(target, NAV_DURATION * Math.abs(target - navProgress));
+        }
+    }
+
+    function scheduleSnap() {
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(snapNavigationProgress, 150);
+    }
+
+    function shouldAllowInternalScroll(deltaY) {
+        if (navProgress >= 1) {
+            if (about[0].scrollTop > 0) {
+                return true;
+            }
+
+            return deltaY < 0;
+        }
+
+        if (navProgress <= -1) {
+            if (work[0].scrollTop > 0) {
+                return true;
+            }
+
+            return deltaY > 0;
+        }
+
+        return false;
+    }
+
+    var touchLastY = null;
+
+    function isInteractiveTouchTarget(target) {
+        if (!target || !target.closest) {
+            return false;
+        }
+
+        return !!target.closest(
+            "a, button, input, textarea, select, label, [role='button'], " +
+            ".ajax-section__project-navigation, .ajax-section__project-close, " +
+            ".hero__trigger-button, .close-button, .thumbnail"
+        );
+    }
+
+    function handleScrollDelta(deltaY, e) {
+        if (!deltaY) {
+            return;
+        }
+
+        if (navAnimating) {
+            if (e && e.cancelable) {
+                e.preventDefault();
+            }
+            return;
+        }
+
+        if (shouldAllowInternalScroll(deltaY)) {
+            return;
+        }
+
+        if (e && e.cancelable) {
+            e.preventDefault();
+        }
+
+        applyNavigationProgress(navProgress - deltaY / scrollRange());
+        scheduleSnap();
+    }
+
+    function onWheel(e) {
+        handleScrollDelta(e.deltaY, e);
+    }
+
+    function onTouchStart(e) {
+        if (e.touches.length !== 1 || isInteractiveTouchTarget(e.target)) {
+            touchLastY = null;
+            return;
+        }
+
+        touchLastY = e.touches[0].clientY;
+    }
+
+    function onTouchMove(e) {
+        if (touchLastY === null || e.touches.length !== 1 || isInteractiveTouchTarget(e.target)) {
+            return;
+        }
+
+        var y = e.touches[0].clientY;
+        var deltaY = touchLastY - y;
+
+        touchLastY = y;
+        handleScrollDelta(deltaY, e);
+    }
+
+    function onTouchEnd() {
+        touchLastY = null;
+        scheduleSnap();
+    }
+
+    applyNavigationProgress(0);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+
     topTrigger.click(function () {
-        about.removeClass("idle").addClass("active-screen");
-        hero.animate({ top: "20%" }, 500);
+        openAbout();
         return false;
     });
 
     closeTop.click(function () {
-        about.addClass("idle").removeClass("active-screen");
-        hero.animate({ top: 0 }, 500);
+        closeAbout();
         return false;
     });
-
-    function openWork() {
-        work.removeClass("idle").addClass("active-screen");
-        hero.animate({ top: "-20%" }, 500);
-    }
 
     bottomTrigger.click(function () {
         openWork();
         return false;
     });
 
-    $(".hero__content").click(function () {
-        openWork();
-    });
-
     closeBottom.click(function () {
-        work.addClass("idle").removeClass("active-screen");
-        hero.animate({ top: 0 }, 500);
+        closeWork();
         return false;
     });
 
@@ -160,15 +346,9 @@
     }
 
     function initializePortfolio() {
-        var current;
-        var next;
-        var prev;
-        var target;
         var hash;
         var url;
-        var projectIndex;
         var scrollPosition;
-        var projectLength;
         var ajaxLoading = false;
         var pageRefresh = true;
         var content = false;
@@ -241,8 +421,8 @@
             ajaxLoading = true;
             loader.hide().removeClass("projectError").empty();
 
-            if ($(".work").hasClass("idle")) {
-                $(".work").removeClass("idle").addClass("active-screen");
+            if (navProgress > -1) {
+                openWork();
             }
 
             if (project) {
@@ -274,18 +454,23 @@
                 window.dispatchEvent(new Event("dotfield:resize"));
             });
 
-            projectIndex = portfolioGrid.find(".project.current").index();
-            projectLength = portfolioGrid.find(".project a").length - 1;
+            syncProjectNavButtons();
+        }
 
-            if (projectIndex === projectLength) {
-                $(".ajax-section__project-navigation .next a").addClass("disabled");
-                $(".ajax-section__project-navigation .prev a").removeClass("disabled");
-            } else if (projectIndex === 0) {
-                $(".ajax-section__project-navigation .next a").removeClass("disabled");
-                $(".ajax-section__project-navigation .prev a").addClass("disabled");
-            } else {
-                $(".ajax-section__project-navigation .next a, .ajax-section__project-navigation .prev a").removeClass("disabled");
-            }
+        function syncProjectNavButtons() {
+            var projects = portfolioGrid.find(".project");
+            var current = portfolioGrid.find(".project.current");
+            var projectIndex = projects.index(current);
+            var projectLength = projects.length - 1;
+            var navNext = $(".ajax-section__project-navigation.active-ajax .next a");
+            var navPrev = $(".ajax-section__project-navigation.active-ajax .prev a");
+            var nextHref = current.next(".project").children("a").attr("href");
+            var prevHref = current.prev(".project").children("a").attr("href");
+
+            navNext.attr("href", nextHref || "#");
+            navPrev.attr("href", prevHref || "#");
+            navNext.toggleClass("disabled", projectIndex < 0 || projectIndex >= projectLength);
+            navPrev.toggleClass("disabled", projectIndex <= 0);
         }
 
         function deleteProject(closeURL) {
@@ -303,6 +488,7 @@
             projectContainer.stop(true).fadeOut(200, function () {
                 projectContainer.empty().css({ display: "none", height: "", opacity: "", overflow: "" });
                 content = false;
+                window.dispatchEvent(new Event("dotfield:resize"));
             });
 
             $("#work").stop().animate({ scrollTop: 0 }, 400);
@@ -313,36 +499,34 @@
             portfolioGrid.find(".project.current").removeClass("current");
         }
 
-        $(".ajax-section__project-navigation .next a").on("click", function () {
-            current = portfolioGrid.find(".project.current");
-            next = current.next(".project");
-            target = $(next).children("a").attr("href");
-            $(this).attr("href", target);
+        function navigateProjectNav(href) {
+            if (!href || href === "#") {
+                return;
+            }
 
-            if (next.length === 0) {
+            window.location.hash = href.charAt(0) === "#" ? href.slice(1) : href;
+        }
+
+        $(".ajax-section__project-navigation .next a").on("click", function (e) {
+            if ($(this).hasClass("disabled")) {
+                e.preventDefault();
                 return false;
             }
 
-            current.removeClass("current");
-            current.children().removeClass("active");
-            next.addClass("current");
-            next.children().addClass("active");
+            e.preventDefault();
+            navigateProjectNav($(this).attr("href"));
+            return false;
         });
 
-        $(".ajax-section__project-navigation .prev a").on("click", function () {
-            current = portfolioGrid.find(".project.current");
-            prev = current.prev(".project");
-            target = $(prev).children("a").attr("href");
-            $(this).attr("href", target);
-
-            if (prev.length === 0) {
+        $(".ajax-section__project-navigation .prev a").on("click", function (e) {
+            if ($(this).hasClass("disabled")) {
+                e.preventDefault();
                 return false;
             }
 
-            current.removeClass("current");
-            current.children().removeClass("active");
-            prev.addClass("current");
-            prev.children().addClass("active");
+            e.preventDefault();
+            navigateProjectNav($(this).attr("href"));
+            return false;
         });
 
         $(".ajax-section__project-close a").on("click", function () {

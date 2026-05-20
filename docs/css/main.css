@@ -15,7 +15,7 @@
 }
 
 body {
-    background: #fff;
+    background: #000;
     font-family: "Inter", "Helvetica Neue", "Helvetica", sans-serif;
     font-weight: 400;
     color: #353535;
@@ -176,46 +176,6 @@ h6 {
     font-size: .625rem
 }
 
-@keyframes pullUp {
-    from {
-        transform: none
-    }
-
-    to {
-        transform: translate3d(0, -100%, 0)
-    }
-}
-
-@keyframes pullDown {
-    from {
-        transform: translate3d(0, -100%, 0)
-    }
-
-    to {
-        transform: translate3d(0, 0, 0)
-    }
-}
-
-@keyframes pullUpBottom {
-    from {
-        transform: none
-    }
-
-    to {
-        transform: translate3d(0, 100%, 0)
-    }
-}
-
-@keyframes pullDownBottom {
-    from {
-        transform: translate3d(0, 100%, 0)
-    }
-
-    to {
-        transform: translate3d(0, 0, 0)
-    }
-}
-
 main .meta.social {
     bottom: 1.875rem;
     left: 1.25rem
@@ -320,9 +280,10 @@ main .close-button.bottom {
     top: auto
 }
 
-.queryloader__overlay__bar {
-    background: #BDBDBD !important;
-    height: 1px !important
+@property --nav-progress {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0
 }
 
 main {
@@ -330,6 +291,38 @@ main {
     width: 100%;
     height: 100%;
     overflow: hidden
+}
+
+main.is-nav-driven {
+    --nav-progress: 0
+}
+
+main.is-nav-driven.is-nav-animating {
+    transition: --nav-progress var(--nav-transition-duration, 0.5s) cubic-bezier(0.85, 0.135, 0.15, 0.5)
+}
+
+main.is-nav-driven #hero {
+    top: calc(var(--nav-progress) * 20%);
+    animation: none !important;
+    transition: none !important
+}
+
+main.is-nav-driven #about {
+    top: calc(-100% + clamp(0, var(--nav-progress), 1) * 100%);
+    animation: none !important;
+    transition: none !important
+}
+
+main.is-nav-driven #work {
+    top: calc(100% - clamp(0, calc(var(--nav-progress) * -1), 1) * 100%);
+    animation: none !important;
+    transition: none !important
+}
+
+@media (prefers-reduced-motion: reduce) {
+    main.is-nav-driven.is-nav-animating {
+        transition: none
+    }
 }
 
 main .logo {
@@ -386,44 +379,7 @@ main .meta.name p {
     position: absolute;
     z-index: 1;
     overflow: hidden;
-    width: 100%;
-    background-image: radial-gradient(50% 100%, #e6e6e6 50%, #d6d6d6 100%)
-}
-
-.hero__content {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    padding: 0 5%;
-    text-align: center;
-    cursor: pointer
-}
-
-@media (min-width: 768px) {
-    .hero__content {
-        padding: 0 10%
-    }
-}
-
-.hero__content h1,
-.hero__content p {
-    margin: 0
-}
-
-.hero__content h2 {
-    font-size: 1rem
-}
-
-@media (min-width: 768px) {
-    .hero__content h2 {
-        font-size: 1.125rem
-    }
-}
-
-@media (min-width: 992px) {
-    .hero__content h2 {
-        font-size: 1.25rem
-    }
+    width: 100%
 }
 
 .hero__three-container {
@@ -431,8 +387,47 @@ main .meta.name p {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     pointer-events: none
+}
+
+#hero > .logo,
+#hero .meta,
+#hero .hero__trigger-button {
+    opacity: 0;
+    transition: opacity 0.19s ease
+}
+
+/* 1 — corners together */
+#hero.is-ui-visible > .logo,
+#hero.is-ui-visible .meta.name,
+#hero.is-ui-visible .meta.social {
+    opacity: 1;
+    transition-delay: 0.01s
+}
+
+/* 2 — centre edge buttons */
+#hero.is-ui-visible .hero__trigger-button.top,
+#hero.is-ui-visible .hero__trigger-button.bottom {
+    opacity: 1;
+    transition-delay: 0.1s
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #hero > .logo,
+    #hero .meta,
+    #hero .hero__trigger-button {
+        transition: none
+    }
+
+    #hero.is-ui-visible > .logo,
+    #hero.is-ui-visible .meta,
+    #hero.is-ui-visible .hero__trigger-button {
+        opacity: 1;
+        transition-delay: 0s
+    }
 }
 
 .hero__trigger-button {
@@ -459,19 +454,8 @@ main .meta.name p {
     transform: translateX(-50%)
 }
 
-.hero.sphere {
-    background: #FBFFFF
-}
-
 .hero.dark {
     background: #000
-}
-
-.hero.dark .hero__content p,
-.hero.dark .hero__content h1,
-.hero.dark .hero__content h2 {
-    color: #E0E0E0;
-    text-shadow: 0 .125rem .5rem #fff
 }
 
 .hero.dark .hero__trigger-button {
@@ -496,11 +480,9 @@ main .meta.name p {
     width: 100%;
     height: 100%;
     overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     background: #000
-}
-
-.about .underline {
-    text-shadow: none
 }
 
 .about a {
@@ -517,25 +499,11 @@ main .meta.name p {
 
 .about.idle {
     pointer-events: none;
-    top: -100%;
-    -webkit-animation-name: pullUp;
-    animation-name: pullUp;
-    -webkit-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -moz-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -ms-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -o-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5)
+    top: -100%
 }
 
 .about.active-screen {
-    top: 0;
-    -webkit-animation-name: pullDown;
-    animation-name: pullDown;
-    -webkit-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -moz-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -ms-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -o-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5)
+    top: 0
 }
 
 .about.active-screen .close-button {
@@ -599,22 +567,6 @@ main .meta.name p {
 
 .about__content__box .services li:last-of-type {
     margin-bottom: 0
-}
-
-.about__content__box.last {
-    margin-bottom: 6.25rem
-}
-
-@media (min-width: 768px) {
-    .about__content__box.last {
-        margin-bottom: 7.5rem
-    }
-}
-
-@media (min-width: 992px) {
-    .about__content__box.last {
-        margin-bottom: 9.375rem
-    }
 }
 
 .about__content__box.first {
@@ -706,6 +658,8 @@ main .meta.name p {
     height: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     background: #000
 }
 
@@ -723,25 +677,11 @@ main .meta.name p {
 
 .work.idle {
     pointer-events: none;
-    top: 100%;
-    -webkit-animation-name: pullUpBottom;
-    animation-name: pullUpBottom;
-    -webkit-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -moz-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -ms-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -o-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5)
+    top: 100%
 }
 
 .work.active-screen {
-    top: 0;
-    -webkit-animation-name: pullDownBottom;
-    animation-name: pullDownBottom;
-    -webkit-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -moz-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -ms-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    -o-transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5);
-    transition: top 0.5s cubic-bezier(0.85, 0.135, 0.15, 0.5)
+    top: 0
 }
 
 .work.active-screen .close-button {
@@ -1030,8 +970,11 @@ main .meta.name p {
 }
 
 .work__content .ajax-section__content {
-    display: none;
-    overflow: hidden
+    display: none
+}
+
+.work__content .ajax-section__content.active-ajax {
+    overflow: visible
 }
 
 .work__content .ajax-section {
@@ -1090,7 +1033,17 @@ main .meta.name p {
     font-weight: bold;
     color: #E0E0E0;
     white-space: nowrap;
+    opacity: 1;
     transition: opacity .3s ease-in-out
+}
+
+.work__content .ajax-section__project-navigation ul .next a:hover,
+.work__content .ajax-section__project-navigation ul .next a:active,
+.work__content .ajax-section__project-navigation ul .next a:focus,
+.work__content .ajax-section__project-navigation ul .prev a:hover,
+.work__content .ajax-section__project-navigation ul .prev a:active,
+.work__content .ajax-section__project-navigation ul .prev a:focus {
+    opacity: 1
 }
 
 .work__content .ajax-section__project-navigation ul .prev {
@@ -1152,6 +1105,7 @@ main .meta.name p {
 }
 
 .work__content .ajax-section__content .ajaxpage {
+    width: 100%;
     margin-top: 2.5rem;
     background: #0a0a0a;
     border-top: 1px solid rgba(224, 224, 224, 0.14);
@@ -1169,10 +1123,6 @@ main .meta.name p {
     .work__content .ajax-section__content .ajaxpage {
         margin-top: 5rem
     }
-}
-
-.work__content .ajax-section__content .ajaxpage {
-    width: 100%
 }
 
 .work__content .ajax-section__content .ajaxpage__media {
@@ -1349,7 +1299,6 @@ main .meta.name p {
     left: 0;
     right: 0;
     width: 100%;
-    min-height: 100%;
     z-index: 0;
     pointer-events: none;
     background: #000
@@ -1366,5 +1315,3 @@ main .meta.name p {
     position: relative;
     z-index: 1
 }
-
-/*# sourceMappingURL=main.css.map */

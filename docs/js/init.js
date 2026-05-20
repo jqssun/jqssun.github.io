@@ -75,8 +75,6 @@
         }
     }
 
-    setText(".hero__content h1", s.hero.title);
-    setText(".hero__content h2", s.hero.subtitle);
     setText(".hero__trigger-button.top", s.hero.buttonTop);
     setText(".hero__trigger-button.bottom", s.hero.buttonBottom);
 
@@ -86,7 +84,7 @@
 
     setText(".about__content__box.first h5", s.about.heading);
     setText(".about__content__box.first p", s.about.description);
-    setText(".about__content__box:not(.first):not(.last) h5", s.services.heading);
+    setText(".about__content__box:not(.first) h5", s.services.heading);
 
     (function renderServices() {
         var list = document.querySelector(".services");
@@ -124,7 +122,7 @@
             award = s.awards.items[j];
             li = document.createElement("li");
             img = document.createElement("img");
-            img.src = award.image;
+            img.src = award.icon;
             img.alt = award.name;
 
             if (award.invert) {
@@ -141,11 +139,11 @@
 
     renderProjectThumbnails();
 
-    document.querySelectorAll(".about__content__box.last h5").forEach(function (h5) {
+    document.querySelectorAll(".work__content__box.last h5").forEach(function (h5) {
         h5.textContent = s.cta.heading;
     });
 
-    document.querySelectorAll(".about__content__box.last p").forEach(function (p) {
+    document.querySelectorAll(".work__content__box.last p").forEach(function (p) {
         p.innerHTML = U.escapeHtml(s.cta.text) + ' <a class="underline" href="mailto:' +
             U.escapeHtml(s.contact.email) + '">' + U.escapeHtml(s.contact.email) + "</a>";
     });

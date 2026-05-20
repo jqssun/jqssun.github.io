@@ -29,12 +29,19 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap-reboot.min.css" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/css/bootstrap-grid.min.css" />
 	<link rel="stylesheet" href="css/main.css" />
+	<style>
+		html,
+		body {
+			background: #000;
+		}
+
+	</style>
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
 </head>
 
-<body>
+<body class="is-loading">
 
 	<script>
 		window.site = {
@@ -50,12 +57,12 @@
 			},
 			locations: {
 				london: {
-					label: "locate me",
-					hover: "london",
+					label: "locate",
+					hover: "locate",
 					url: "#"
 				},
 				phone: {
-					label: "phone me",
+					label: "call",
 					hover: "call",
 					url: "tel:"
 				}
@@ -71,10 +78,8 @@
 				}
 			},
 			hero: {
-				title: "projects",
-				subtitle: "built by jqssun",
 				buttonTop: "about",
-				buttonBottom: "work"
+				buttonBottom: "things"
 			},
 			about: {
 				heading: "about",
@@ -83,16 +88,16 @@
 			services: {
 				heading: "things i can do",
 				items: [
-					"sw: infra, networking, sysadmin",
-					"hw: pcb, sensors, soc",
+					"sw: ml infra, inference, edge",
+					"hw: pcb, kernels, compilers",
 					"+ all things aero & mech too"
 				]
 			},
 			awards: {
 				heading: "member of",
 				items: [
-					{ name: "ucam", image: "https://www.cam.ac.uk/sites/all/themes/fresh/images/interface/cambridge_university2.svg", invert: true },
-					{ name: "cues", image: "https://www.cues.org.uk/wp-content/themes/cues-theme/assets/img/logo_white.svg" }
+					{ name: "ucam", icon: "https://www.cam.ac.uk/sites/all/themes/fresh/images/interface/cambridge_university2.svg", invert: true },
+					{ name: "cues", icon: "https://www.cues.org.uk/wp-content/themes/cues-theme/assets/img/logo_white.svg" }
 				]
 			},
 			work: {
@@ -239,11 +244,6 @@
 	<script src="js/utils.js"></script>
 	<main role="main">
 		<section id="hero" class="hero dark sphere">
-			<div class="hero__content">
-				<h1></h1>
-				<h2></h2>
-			</div>
-
 			<a href="#" class="hero__trigger-button top"></a>
 			<a href="#" class="hero__trigger-button bottom"></a>
 
@@ -288,12 +288,6 @@
 							</div>
 						</div>
 					</div>
-					<div class="row">
-						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 about__content__box last">
-							<h5></h5>
-							<p></p>
-						</div>
-					</div>
 				</div>
 				<a href="#" class="close-button top"></a>
 			</div>
@@ -326,7 +320,7 @@
 					<div class="row work__content__thumbnails"></div>
 
 					<div class="row">
-						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 about__content__box last">
+						<div class="col-10 offset-1 col-md-8 offset-md-2 col-lg-6 offset-lg-3 work__content__box last">
 							<h5></h5>
 							<p></p>
 						</div>
@@ -336,9 +330,6 @@
 			</div>
 		</section>
 	</main>
-
-	<script src="https://cdn.jsdelivr.net/gh/Gaya/queryloader2@master/queryloader2.min.js"
-		type="text/javascript"></script>
 
 	<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r83/examples/js/renderers/Projector.js"
 		type="text/javascript"></script>

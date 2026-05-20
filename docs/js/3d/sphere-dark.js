@@ -1,30 +1,38 @@
 (function () {
 	"use strict";
 
-	var SCREEN_WIDTH = window.innerWidth,
-		SCREEN_HEIGHT = window.innerHeight,
+	var SCREEN_WIDTH = window.innerWidth;
+	var SCREEN_HEIGHT = window.innerHeight;
+	var HERO_CAMERA_Z = 1000;
+	var NAV_CAMERA_Z = 320;
+	var LOADER_CAMERA_START_Z = 3400;
+	var LOADER_MIN_MS = 1200;
 
-		mouseX = 0, mouseY = 0,
-		windowHalfX = window.innerWidth / 2,
-		windowHalfY = window.innerHeight / 2,
-		lastClientX = windowHalfX,
-		lastClientY = windowHalfY,
-		hasPointerSample = false,
-		lastPointerTime = 0,
-		velocityX = 0,
-		velocityY = 0,
-		POINTER_IDLE_MS = 120,
-		MAX_VELOCITY = 7,
+	var mouseX = 0;
+	var mouseY = 0;
+	var windowHalfX = window.innerWidth / 2;
+	var windowHalfY = window.innerHeight / 2;
+	var lastClientX = windowHalfX;
+	var lastClientY = windowHalfY;
+	var hasPointerSample = false;
+	var lastPointerTime = 0;
+	var velocityX = 0;
+	var velocityY = 0;
+	var POINTER_IDLE_MS = 120;
+	var MAX_VELOCITY = 7;
 
-		camera, scene, renderer, linesGroup, lineItems = [];
+	var camera;
+	var scene;
+	var renderer;
+	var linesGroup;
+	var lineItems = [];
+	var threeContainer;
+	var heroInteractionEnabled = false;
+	var loaderDone = false;
 
-	init();
-	animate();
-
-	function init() {
-		var particles, particle;
-		var hero = document.getElementById("hero");
-		var container = document.createElement("div");
+	function createSphereScene(container) {
+		var particles;
+		var particle;
 		var i;
 		var PI2 = Math.PI * 2;
 		var material;
@@ -34,12 +42,14 @@
 		var line;
 		var direction;
 		var spikeScale;
+		var wrap = document.createElement("div");
 
-		container.className = "hero__three-container";
-		hero.appendChild(container);
+		wrap.className = "hero__three-container";
+		container.appendChild(wrap);
+		threeContainer = wrap;
 
 		camera = new THREE.PerspectiveCamera(75, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 10000);
-		camera.position.z = 1000;
+		camera.position.z = HERO_CAMERA_Z;
 
 		scene = new THREE.Scene();
 		linesGroup = new THREE.Group();
@@ -48,7 +58,7 @@
 		renderer = new THREE.CanvasRenderer({ alpha: true });
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-		container.appendChild(renderer.domElement);
+		wrap.appendChild(renderer.domElement);
 
 		material = new THREE.SpriteCanvasMaterial({
 			color: 0xE0E0E0,
@@ -69,6 +79,8 @@
 			particle.scale.multiplyScalar(2);
 			scene.add(particle);
 		}
+
+		lineItems = [];
 
 		for (i = 0; i < 600; i++) {
 			direction = new THREE.Vector3(
@@ -105,9 +117,6 @@
 				baseOpacity: line.material.opacity
 			});
 		}
-
-		document.addEventListener("mousemove", onDocumentMouseMove, false);
-		window.addEventListener("resize", onWindowResize, false);
 	}
 
 	function onWindowResize() {
@@ -121,6 +130,10 @@
 	}
 
 	function onDocumentMouseMove(event) {
+		if (!heroInteractionEnabled) {
+			return;
+		}
+
 		var dx;
 		var dy;
 
@@ -174,46 +187,196 @@
 		}
 	}
 
-	function animate() {
-		requestAnimationFrame(animate);
-		render();
+	function getNavProgress() {
+		var main = document.querySelector("main.is-nav-driven");
+
+		if (!main) {
+			return 0;
+		}
+
+		return Math.abs(parseFloat(getComputedStyle(main).getPropertyValue("--nav-progress")) || 0);
 	}
 
 	function updateCamera() {
 		var targetY = -mouseY + 200;
-		var pointerActive = (Date.now() - lastPointerTime) < POINTER_IDLE_MS;
+		var pointerActive = heroInteractionEnabled && (Date.now() - lastPointerTime) < POINTER_IDLE_MS;
 		var friction = pointerActive ? 0.9 : 0.97;
+		var navAmount;
 
 		if (pointerActive) {
 			camera.position.x += (mouseX - camera.position.x) * 0.05;
 			camera.position.y += (targetY - camera.position.y) * 0.05;
 		}
 
-		camera.position.x += velocityX;
-		camera.position.y += velocityY;
+		if (heroInteractionEnabled) {
+			camera.position.x += velocityX;
+			camera.position.y += velocityY;
 
-		velocityX *= friction;
-		velocityY *= friction;
+			velocityX *= friction;
+			velocityY *= friction;
 
-		if (Math.abs(velocityX) < 0.008) {
-			velocityX = 0;
+			if (Math.abs(velocityX) < 0.008) {
+				velocityX = 0;
+			}
+			if (Math.abs(velocityY) < 0.008) {
+				velocityY = 0;
+			}
 		}
-		if (Math.abs(velocityY) < 0.008) {
-			velocityY = 0;
+
+		if (loaderDone) {
+			navAmount = getNavProgress();
+			camera.position.z = HERO_CAMERA_Z + (NAV_CAMERA_Z - HERO_CAMERA_Z) * navAmount;
 		}
 
 		camera.lookAt(scene.position);
 	}
 
-	function render() {
+	function renderFrame() {
 		var time = Date.now() * 0.001;
 
 		updateCamera();
-
 		animateLines(time);
 
 		renderer.setClearColor(0x000000, 0);
 		renderer.render(scene, camera);
 	}
 
+	function animate() {
+		requestAnimationFrame(animate);
+		renderFrame();
+	}
+
+	function easeOutCubic(t) {
+		return 1 - Math.pow(1 - t, 3);
+	}
+
+	function revealHeroUi() {
+		var hero = document.getElementById("hero");
+
+		if (!hero) {
+			return;
+		}
+
+		requestAnimationFrame(function () {
+			requestAnimationFrame(function () {
+				hero.classList.add("is-ui-visible");
+			});
+		});
+	}
+
+	function runLoaderZoom() {
+		var hero = document.getElementById("hero");
+		var start = null;
+		var duration = 1600;
+		var pageReady = false;
+		var zoomDone = false;
+
+		function beginUiReveal() {
+			document.body.classList.remove("is-loading");
+			revealHeroUi();
+		}
+
+		function maybeFinish() {
+			if (!pageReady || !zoomDone || loaderDone) {
+				return;
+			}
+
+			loaderDone = true;
+			heroInteractionEnabled = true;
+		}
+
+		function step(timestamp) {
+			var progress;
+
+			if (!start) {
+				start = timestamp;
+			}
+
+			progress = Math.min(1, (timestamp - start) / duration);
+			camera.position.z = LOADER_CAMERA_START_Z + (HERO_CAMERA_Z - LOADER_CAMERA_START_Z) * easeOutCubic(progress);
+			renderFrame();
+
+			if (progress < 1) {
+				requestAnimationFrame(step);
+				return;
+			}
+
+			camera.position.z = HERO_CAMERA_Z;
+			zoomDone = true;
+			animate();
+			maybeFinish();
+		}
+
+		document.body.classList.add("is-loading");
+		createSphereScene(hero);
+		camera.position.z = LOADER_CAMERA_START_Z;
+		renderFrame();
+		beginUiReveal();
+
+		if (document.readyState === "complete") {
+			pageReady = true;
+		} else {
+			window.addEventListener("load", function onLoad() {
+				window.removeEventListener("load", onLoad);
+				pageReady = true;
+				maybeFinish();
+			});
+		}
+
+		window.setTimeout(function () {
+			pageReady = true;
+			maybeFinish();
+		}, LOADER_MIN_MS);
+
+		requestAnimationFrame(step);
+	}
+
+	function finishLoadingFallback() {
+		document.body.classList.remove("is-loading");
+		revealHeroUi();
+	}
+
+	function init() {
+		var hero = document.getElementById("hero");
+
+		document.addEventListener("mousemove", onDocumentMouseMove, false);
+		window.addEventListener("resize", onWindowResize, false);
+
+		try {
+			if (typeof THREE === "undefined" || typeof THREE.CanvasRenderer === "undefined") {
+				throw new Error("Three.js renderer unavailable");
+			}
+
+			if (hero) {
+				runLoaderZoom();
+				return;
+			}
+
+			if (hero) {
+				createSphereScene(hero);
+				heroInteractionEnabled = true;
+				animate();
+				revealHeroUi();
+			}
+		} catch (err) {
+			finishLoadingFallback();
+
+			if (hero) {
+				try {
+					createSphereScene(hero);
+					heroInteractionEnabled = true;
+					animate();
+					revealHeroUi();
+				} catch (innerErr) {
+					// Hero sphere unavailable; page content still usable.
+				}
+			}
+		}
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", init);
+	} else {
+		init();
+	}
 })();

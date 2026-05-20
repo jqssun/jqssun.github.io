@@ -1,10 +1,10 @@
 (function () {
 	"use strict";
 
-	var SPACING = 24;
+	var SPACING = 36;
 	var DOT_RADIUS = 1.28;
-	var INFLUENCE = 160;
-	var STRENGTH = 48;
+	var INFLUENCE = 220;
+	var STRENGTH = 88;
 	var EASE = 0.16;
 	var IDLE_EASE = 0.08;
 	var DOT_COLOR = "rgba(224, 224, 224, 0.32)";
@@ -35,7 +35,8 @@
 
 		function sectionPaintHeight() {
 			var contentHeight = contentEl ? contentEl.offsetHeight : 0;
-			return Math.max(section.clientHeight, section.scrollHeight, contentHeight);
+
+			return Math.max(section.clientHeight, contentHeight);
 		}
 
 		function buildGrid(w, h) {
